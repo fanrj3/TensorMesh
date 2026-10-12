@@ -1,0 +1,13 @@
+# Optional component. Requires cgroup v1 hybrid (see docs/admin-guide/gpu-isolation.md). Render placeholders before installing.
+[Unit]
+Description=TensorMesh login-shell no-GPU cgroup daemon (user: __ISOLATION_USER__)
+After=multi-user.target slurmd.service
+
+[Service]
+Type=simple
+ExecStart=__REPO_ROOT__/scripts/systemd/tensormesh-gpu-isolation.sh __ISOLATION_USER__ daemon
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

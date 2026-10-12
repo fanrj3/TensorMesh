@@ -1,0 +1,24 @@
+{
+  "name": "@tensormesh/cli",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "tmesh": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "node --import tsx src/index.ts",
+    "slurm:config": "node --import tsx src/slurm-config.ts",
+    "test": "node --import tsx --test src/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tensormesh/shared": "1.0.0",
+    "tsx": "^4.19.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "TensorMesh"
+  short_description: "Use tmesh GPU server workflows"
+  default_prompt: "Use $tensormesh to inspect GPU state, manage tmesh jobs or bash sessions, call the Agent API, or mount local services behind port 8000."
+policy:
+  allow_implicit_invocation: true

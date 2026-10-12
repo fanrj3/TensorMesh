@@ -1,0 +1,35 @@
+{
+  "name": "tensormesh",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Lightweight GPU management platform for shared research servers (Slurm + tmux + web dashboard + CLI/TUI).",
+  "license": "MIT",
+  "author": "RJ Fan",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fanrj3/TensorMesh.git"
+  },
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @tensormesh/web run dev",
+    "dev:server": "npm --workspace @tensormesh/server run dev",
+    "dev:cli": "npm --workspace @tensormesh/cli run dev",
+    "dev:docs": "npm --workspace @tensormesh/docs run start",
+    "build:docs": "npm --workspace @tensormesh/docs run build",
+    "build:web": "npm --workspace @tensormesh/web run build",
+    "start:server": "npm --workspace @tensormesh/server run start",
+    "start:web": "npm --workspace @tensormesh/web run start",
+    "sync:docs:web": "node scripts/sync-docs-to-web.mjs",
+    "deploy:docs:web": "npm run build:docs && npm run sync:docs:web",
+    "build": "npm --workspaces --if-present run build",
+    "typecheck": "npm --workspaces --if-present run typecheck",
+    "test": "npm --workspaces --if-present run test"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

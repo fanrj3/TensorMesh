@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  SOURCE_DIR="$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd)"
+  TARGET="$(readlink "$SOURCE")"
+  if [[ "$TARGET" == /* ]]; then
+    SOURCE="$TARGET"
+  else
+    SOURCE="$SOURCE_DIR/$TARGET"
+  fi
+done
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$SOURCE")" && pwd)"
+REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
+
+if [[ $# -eq 0 ]]; then
+  if command -v /usr/bin/python3 >/dev/null 2>&1; then
+    exec /usr/bin/python3 -S "$REPO_ROOT/apps/cli_tui/tmesh_curses.py"
+  fi
+fi
+
+TSX_LOADER="$REPO_ROOT/node_modules/tsx/dist/loader.mjs"
+if [[ ! -f "$TSX_LOADER" ]]; then
+  echo "TensorMesh CLI dependency is missing: $TSX_LOADER" >&2
+  echo "Run npm install in $REPO_ROOT before using tmesh." >&2
+  exit 1
+fi
+
+NODE_BIN="${TENSORMESH_NODE:-}"
+if [[ -z "$NODE_BIN" ]]; then
+  for candidate in \
+    "$REPO_ROOT/.node/bin/node" \
+    "/usr/local/bin/node" \
+    "/usr/bin/node"; do
+    if [[ -x "$candidate" ]]; then
+      NODE_BIN="$candidate"
+      break
+    fi
+  done
+fi
+if [[ -z "$NODE_BIN" ]] && command -v node >/dev/null 2>&1; then
+  NODE_BIN="$(command -v node)"
+fi
+if [[ -z "$NODE_BIN" || ! -x "$NODE_BIN" ]]; then
+  echo "TensorMesh requires Node.js, but no executable node was found." >&2
+  echo "Set TENSORMESH_NODE=/absolute/path/to/node or install node system-wide." >&2
+  exit 1
+fi
+
+exec "$NODE_BIN" --import "$TSX_LOADER" "$REPO_ROOT/apps/cli/src/index.ts" "$@"

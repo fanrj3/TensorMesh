@@ -1,0 +1,19 @@
+# TensorMesh Web UI service. install.sh substitutes the template placeholders
+# (repo root, node bin dir, npm bin, service user) with real values before installing.
+[Unit]
+Description=TensorMesh Web
+After=network-online.target tensormesh-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__SERVICE_USER__
+WorkingDirectory=__REPO_ROOT__
+EnvironmentFile=-/etc/tensormesh/tensormesh.env
+Environment=PATH=__NODE_BIN_DIR__:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=__NPM_BIN__ run start:web
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

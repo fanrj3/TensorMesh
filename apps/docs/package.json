@@ -1,0 +1,34 @@
+{
+  "name": "@tensormesh/docs",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "NO_UPDATE_NOTIFIER=1 docusaurus start --host 0.0.0.0",
+    "build": "NO_UPDATE_NOTIFIER=1 docusaurus build && node scripts/strip-nul-build-output.mjs",
+    "serve": "NO_UPDATE_NOTIFIER=1 docusaurus serve --host 0.0.0.0",
+    "clear": "NO_UPDATE_NOTIFIER=1 docusaurus clear",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.9.2",
+    "@docusaurus/preset-classic": "3.9.2",
+    "@mdx-js/react": "3.1.1",
+    "clsx": "2.1.1",
+    "prism-react-renderer": "2.4.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "webpack": "5.99.9",
+    "webpack-cli": "5.1.4"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.9.2",
+    "@docusaurus/tsconfig": "3.9.2",
+    "@docusaurus/types": "3.9.2",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

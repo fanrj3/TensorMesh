@@ -1,0 +1,21 @@
+# TensorMesh API service. install.sh substitutes the template placeholders
+# (repo root, node bin dir, npm bin) with real paths before installing.
+[Unit]
+Description=TensorMesh API
+After=network-online.target munge.service slurmctld.service slurmd.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=__REPO_ROOT__
+EnvironmentFile=-/etc/tensormesh/tensormesh.env
+Environment=PATH=__NODE_BIN_DIR__:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Enable GPU persistence mode when the driver supports it; failures are ignored.
+ExecStartPre=-/usr/bin/nvidia-smi -pm 1
+ExecStart=__NPM_BIN__ run start:server
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
