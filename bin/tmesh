@@ -28,24 +28,72 @@ if [[ ! -f "$TSX_LOADER" ]]; then
   exit 1
 fi
 
-NODE_BIN="${TENSORMESH_NODE:-}"
-if [[ -z "$NODE_BIN" ]]; then
-  for candidate in \
+# tsx is launched via `node --import`, which only exists on Node >= 20.6.
+# Reject older binaries instead of blindly taking the first node on disk
+# (e.g. /usr/bin/node may be a decade-old system Node).
+REQUIRED_NODE_MAJOR=20
+
+node_is_supported() {
+  "$1" -e "process.exit(Number(process.versions.node.split('.')[0]) >= $REQUIRED_NODE_MAJOR ? 0 : 1)" \
+    >/dev/null 2>&1
+}
+
+NODE_BIN=""
+REJECTED_NODE=""
+
+# Where to look for node, in priority order: PATH (user override), repo-local,
+# system-wide installs, then per-user version managers. Kept in a function so
+# the list is easy to extend and globs stay scoped.
+node_candidates() {
+  local pattern candidate home="${HOME:-/nonexistent}"
+  command -v node 2>/dev/null || true
+  command -v nodejs 2>/dev/null || true
+  printf '%s\n' \
     "$REPO_ROOT/.node/bin/node" \
     "/usr/local/bin/node" \
-    "/usr/bin/node"; do
-    if [[ -x "$candidate" ]]; then
+    "/opt/nodejs/bin/node" \
+    "/usr/bin/node"
+  shopt -s nullglob
+  for pattern in \
+    "/opt/node-v"*/bin/node \
+    "/opt/node"*/bin/node \
+    "$home/.local/share/pi-node/current/bin/node" \
+    "$home/.nvm/versions/node/"*/bin/node \
+    "$home/.local/share/fnm/node-versions/"*/installation/bin/node \
+    "$home/.volta/bin/node"; do
+    for candidate in $pattern; do
+      printf '%s\n' "$candidate"
+    done
+  done
+  shopt -u nullglob
+}
+
+# An explicit TENSORMESH_NODE wins, but a stale/invalid value must not brick
+# the CLI: warn and fall back to auto-detection instead of exiting.
+if [[ -n "${TENSORMESH_NODE:-}" ]] && node_is_supported "$TENSORMESH_NODE"; then
+  NODE_BIN="$TENSORMESH_NODE"
+elif [[ -n "${TENSORMESH_NODE:-}" ]]; then
+  echo "Warning: TENSORMESH_NODE=$TENSORMESH_NODE is not a usable Node.js (>= $REQUIRED_NODE_MAJOR required); falling back to auto-detection." >&2
+fi
+
+if [[ -z "$NODE_BIN" ]]; then
+  seen=" "
+  while IFS= read -r candidate; do
+    [[ -n "$candidate" && -x "$candidate" ]] || continue
+    [[ "$seen" == *" $candidate "* ]] && continue
+    seen="$seen$candidate "
+    if node_is_supported "$candidate"; then
       NODE_BIN="$candidate"
       break
     fi
-  done
+    REJECTED_NODE="${REJECTED_NODE}${REJECTED_NODE:+ }$candidate ($("$candidate" --version 2>/dev/null || echo unknown))"
+  done < <(node_candidates)
 fi
-if [[ -z "$NODE_BIN" ]] && command -v node >/dev/null 2>&1; then
-  NODE_BIN="$(command -v node)"
-fi
-if [[ -z "$NODE_BIN" || ! -x "$NODE_BIN" ]]; then
-  echo "TensorMesh requires Node.js, but no executable node was found." >&2
-  echo "Set TENSORMESH_NODE=/absolute/path/to/node or install node system-wide." >&2
+if [[ -z "$NODE_BIN" ]]; then
+  echo "TensorMesh requires Node.js >= $REQUIRED_NODE_MAJOR, but no suitable executable was found." >&2
+  [[ -n "$REJECTED_NODE" ]] && echo "Rejected too-old candidate(s): $REJECTED_NODE" >&2
+  echo "Install Node.js >= $REQUIRED_NODE_MAJOR (e.g. unpack it to /opt/nodejs)," >&2
+  echo "set TENSORMESH_NODE=/absolute/path/to/node, or put a newer node first in PATH." >&2
   exit 1
 fi
 
